@@ -17,7 +17,7 @@ myapp.yml
 ~~~~~~~~~~
 
 app:
-  * binary: [ Name
+  * binary: [ Name of the binary to build ]
 
 repos:
   github.com/app1
@@ -84,6 +84,11 @@ which do end up getting started as separate threads.
 One interesting point here is the idea of "subscription"; this is probably not relevant for mereblocks, but in the README design notes
 we did say "a framework that allows for an event based architecture.." 
 
+supervisor-rs
+~~~~~~~~~~~~~
+https://github.com/ccqpein/supervisor-rs
+A supervisor program written in Rust. It is also configured with yaml. See the README. Code has not been updated since 10/21 but
+we should be able to get some inspiration from the config and the code.
 
 docker-compose
 ~~~~~~~~~~~~~~~
