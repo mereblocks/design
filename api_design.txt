@@ -1,0 +1,90 @@
+Mereblocks API notes
+====================
+
+Design Sketch
+---------------
+
+1) Build the fat binary
+./mereblocks build -f myapp.yml
+ - This will build a single (i.e., "fat") binary with supervisor process as the main entrypoint and executables for each Rust package specified in myapp.yml.
+ - Note that myapp.yml is typically a configuration of the fat binary, not the individual Rust application, but it is possible to 
+   specify configuration of the individual Rust applications in myapp.yml. 
+ - Individual Rust applications can provide generic mereblocks configurations via a special file, mereblocks.yml, contained within their git repository.
+ - Note that the basic configuration for the supervisor (i.e., what processes to supervise, how to start them, what runtime parameters they 
+expect, etc.) will be bundled into the fat binary at build time.
+
+myapp.yml
+~~~~~~~~~~
+
+app:
+  * binary: [ Name
+
+repos:
+  github.com/app1
+    * options here override those in the repo *
+    config_file: [ Path relative to the repo root to a mereblocks.yml file; default is /mereblocks.yml ]
+    command: [ executable to launch (will be launched as a separate OS process ]
+    args: [ Arguments that should be passed from app executable ] 
+    restart_policy: [ Always, never, on_failuer, etc ] 
+    files: [ Extra files, e.g., sqlite db file, to be shipped with app. ] 
+    logs: [ How to deal with stdout and stderr as well as log files and other outputs from the individual application ]
+    ports: [ What ports the application communicates externally on. (We may not need this)]
+    ...    
+
+  github.com/app2
+
+  github.com/app3
+
+
+github.com/app1
+~~~~~~~~~~~~~~~~
+  src
+  Cargo.yml
+  mereblocks.yml
+  ... 
+
+
+
+2) Execute the fat binary
+./myapp <runtime_config>
+ - Starts the supervisor which in turn starts the child processes corresponding to the individual applications bundled in the binary.
+ - When the supervisor starts each app, it passes <runtime_config.app_i> from the <runtime_config> passed on the command line.
+ - 
+<runtime_config>
+app1:
+  <app1 config>
+
+app2:
+  <app2 config>
+
+ . . .
+
+
+
+Sources of Inspiration for the supervisor configuration
+------------------------------------------------------
+
+std::process::Command
+~~~~~~~~~~~~~~~~~~~~~~
+https://doc.rust-lang.org/std/process/struct.Command.html
+Command is what I am planning to use to implement the supervisor. It exposes a number of configurations for the process it will spawn;
+
+supervisord
+~~~~~~~~~~~~
+http://supervisord.org/
+Supervisord uses an ini style configuration file, which I would not use today, but the configuration options could be of interest.
+See http://supervisord.org/configuration.html and in particular, the "program" stanza config:
+   http://supervisord.org/configuration.html#program-x-section-settings
+
+Camera Traps
+~~~~~~~~~~~~
+https://github.com/tapis-project/camera-traps
+Our own camera Traps application may be a source of inspiration for the config. Here, we use TOML to configure a set of plugins, 
+which do end up getting started as separate threads. 
+One interesting point here is the idea of "subscription"; this is probably not relevant for mereblocks, but in the README design notes
+we did say "a framework that allows for an event based architecture.." 
+
+
+docker-compose
+~~~~~~~~~~~~~~~
+Some stanzas, such as the network stanza, will not be relevant, but it
